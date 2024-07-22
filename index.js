@@ -27,7 +27,7 @@ const wait = require('node:timers/promises').setTimeout;
 const tmi = require('tmi.js');
 const { url } = require("node:inspector");
 const { Console } = require("node:console");
-const SESSION_SECRET   = generateRandomString(32);
+const SESSION_SECRET = generateRandomString(32);
 const data = new Sequelize('database', 'user', 'password', {
 	host: 'localhost',
 	dialect: 'sqlite',
@@ -115,7 +115,7 @@ OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
     tokenURL: 'https://id.twitch.tv/oauth2/token',
     clientID: tclient_id,
     clientSecret: tclient_secret,
-    callbackURL: tcallback,
+    callbackURL: testing,
     state: true
   },
   async function(accessToken, refreshToken, data, profile, done) {
@@ -269,7 +269,7 @@ app.get('/slogin', async (req, res) => {
             response_type: 'code',
             client_id: sclient_id,
             scope: scope,
-            redirect_uri: scallback,
+            redirect_uri: testing2,
             state: state
           }));
 
@@ -316,7 +316,7 @@ app.get("/scallback" , async (req, res) => {
       url: 'https://accounts.spotify.com/api/token',
       form: {
           code: code,
-          redirect_uri: scallback,
+          redirect_uri: testing2,
           grant_type: 'authorization_code'
         },
         headers: {
@@ -717,3 +717,44 @@ async function getUserSToken(user){
 }
 
 
+
+// Admin Panel
+app.get("/admin", async (req, res) => {
+    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "darkwolfievt") {
+        const html = await ejs.renderFile("views/admin.ejs", {user: req.params.user, admin: req.session.passport.user, DBEdit: DBEdit, DBEdit3: DBEdit3}, {async: true});
+        res.send(html)
+    } else {
+        res.status(401).send({message: "Unauthorized", error: true})
+    }
+})
+
+app.get("/admin/users/settings/:user", async (req, res) => {
+    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "darkwolfievt") {
+        const html = await ejs.renderFile("views/settingsa.ejs", {user: req.params.user, admin: req.session.passport.user, DBEdit: DBEdit, DBEdit3: DBEdit3}, {async: true});
+        res.send(html)
+    } else {
+        res.status(401).send({message: "Unauthorized", error: true})
+    }
+})
+
+app.post('/api/admin', async (req, res) => {
+    const user = await req.body.user
+    const whitelisted = await req.body.whitelist
+    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "darkwolfievt") {
+        
+            var data = await DBEdit3.findOne({where: {user: user}})
+            if (data){
+                if (whitelisted == "true"){
+                    await DBEdit3.update({whitelisted: true}, {where: {user: user}})
+                } else {
+                    await DBEdit3.update({whitelisted: false}, {where: {user: user}})
+                    
+                }
+            }
+        
+    } else {
+        res.status(401).send({message: "Unauthorized", error: true})
+    }
+
+    res.redirect('/admin')
+})
