@@ -115,7 +115,7 @@ OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
     tokenURL: 'https://id.twitch.tv/oauth2/token',
     clientID: tclient_id,
     clientSecret: tclient_secret,
-    callbackURL: testing,
+    callbackURL: tcallback,
     state: true
   },
   async function(accessToken, refreshToken, data, profile, done) {
@@ -137,6 +137,8 @@ OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
     var found2 = await DBEdit3.findOrCreate({where: {user: profile.data[0].login},
         defaults: {
             user: profile.data[0].login,
+            whitelisted: false,
+            style: "default",
             botUsed: null
         }})
     if (found2) {
@@ -269,7 +271,7 @@ app.get('/slogin', async (req, res) => {
             response_type: 'code',
             client_id: sclient_id,
             scope: scope,
-            redirect_uri: testing2,
+            redirect_uri: scallback,
             state: state
           }));
 
@@ -316,7 +318,7 @@ app.get("/scallback" , async (req, res) => {
       url: 'https://accounts.spotify.com/api/token',
       form: {
           code: code,
-          redirect_uri: testing2,
+          redirect_uri: scallback,
           grant_type: 'authorization_code'
         },
         headers: {

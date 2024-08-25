@@ -40,7 +40,7 @@ function saveSettings() {
 }
 
 function cpyOverlayURI(user){
-    navigator.clipboard.writeText("https://overlay.darkwolfie.com/overlay?user=" + user);
+    navigator.clipboard.writeText("https://requestplus.xyz/overlay?user=" + user);
     Overlaybutton.innerHTML = "Copied!";
     setTimeout(function(){ Overlaybutton.innerHTML = "Copy Overlay URL"; }, 2000);
 

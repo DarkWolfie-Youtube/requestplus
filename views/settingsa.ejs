@@ -27,39 +27,50 @@
                                 if (style) {
                                     
                                 
-                                if (style.style == "moonkingbean") { %>
+                                    if (style.style == "moonkingbean") { %>
 
-                                    <option value="moonkingbean">MoonKingBean</option>
-                                    <option value="default">Default</option>
-                                    <option value="hologram">Hologram</option>
-                                    <option value="twinGhost">TwinGhost</option>
+                                        <option value="moonkingbean">MoonKingBean</option>
+                                        <option value="default">Default</option>
+                                        <option value="hologram">Hologram</option>
+                                        <option value="ichinyan">Ichinyan</option>
+                                        <option value="twinGhost">TwinGhost</option>
 
-                                <% } else if (style.style == "default") { %>
+                                    <% } else if (style.style == "default") { %>
+                                        <option value="default">Default</option>
+                                        <option value="hologram">Hologram</option>
+                                        <option value="ichinyan">Ichinyan</option>
+                                        <option value="moonkingbean">MoonKingBean</option>
+                                        <option value="twinGhost">TwinGhost</option>
+                                    <%
+                                    } else if (style.style == "hologram") { %>
+                                        <option value="hologram">Hologram</option>
+                                        <option value="default">Default</option>
+                                        <option value="ichinyan">Ichinyan</option>
+                                        <option value="moonkingbean">MoonKingBean</option>
+                                        <option value="twinGhost">TwinGhost</option>
+
+
+
+                                    <%
+                                    } else if (style.style == "twinGhost") { %>
+                                        <option value="twinGhost">TwinGhost</option>
+                                        <option value="default">Default</option>
+                                        <option value="hologram">Hologram</option>
+                                        <option value="ichinyan">Ichinyan</option>
+                                        <option value="moonkingbean">MoonKingBean</option>
+                                        
+                                    <% }
+                                     else if (style.style == "ichinyan") { %>
+                                        <option value="ichinyan">Ichinyan</option>
+                                        <option value="default">Default</option>
+                                        <option value="hologram">Hologram</option>
+                                        <option value="moonkingbean">MoonKingBean</option>
+                                        <option value="twinGhost">TwinGhost</option>
+                                    <% }
+                                } else { %> 
                                     <option value="default">Default</option>
                                     <option value="hologram">Hologram</option>
-                                    <option value="moonkingbean">MoonKingBean</option>
-                                    <option value="twinGhost">TwinGhost</option>
-                                <%
-                                } else if (style.style == "hologram") { %>
-                                    <option value="hologram">Hologram</option>
-                                    <option value="default">Default</option>
-                                    <option value="moonkingbean">MoonKingBean</option>
-                                    <option value="twinGhost">TwinGhost</option>
-                                   
-                                
-                                
-                                <%
-                                } else if (style.style == "twinGhost") { %>
-                                    <option value="twinGhost">TwinGhost</option>
-                                    <option value="default">Default</option>
-                                    <option value="hologram">Hologram</option>
-                                    <option value="moonkingbean">MoonKingBean</option>
-                                <%    
-                                }
-                                 
-                            } else { %> 
-                                    <option value="default">Default</option>
-                                    <option value="hologram">Hologram</option>
+                                    <option value="ichinyan">Ichinyan</option>
                                     <option value="moonkingbean">MoonKingBean</option>
                                     <option value="twinGhost">TwinGhost</option>
                                     <% } %>
