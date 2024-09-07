@@ -265,7 +265,7 @@ app.get('/slogin', async (req, res) => {
         var user = `${req.session.passport.user.data[0].login}`;
         var cool = await DBEdit2.create({state: state, user: user})
         // your application requests authorization
-        var scope = 'user-read-private user-read-email app-remote-control streaming user-read-playback-state user-modify-playback-state user-read-currently-playing';
+        var scope = 'user-read-private user-read-email user-modify-playback-state user-read-currently-playing';
         res.redirect('https://accounts.spotify.com/authorize?' +
           querystring.stringify({
             response_type: 'code',
@@ -436,7 +436,9 @@ app.get("/nowplaying", async (req, res) => {
         }else if (response.statusCode === 204) {
             res.send({message: "No song playing", error: false})
         
-        } else {
+        } else if (body == "Too many requests"){
+            res.status(403).send({message: "Too many requests", error: true})
+        } else{
             res.status(500).send({message: "Token is invalid or expired", error: true})
         }
     })

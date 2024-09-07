@@ -46,6 +46,30 @@ function cpyOverlayURI(user){
 
 }
 
+function saveID() {
+    settings.user = document.getElementById('user').innerHTML;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/settings';
+
+    // Create form fields
+    const input1 = document.createElement('input');
+    input1.type = 'hidden';
+    input1.name = 'user';
+    input1.value = settings.user;
+    form.appendChild(input1);
+
+    const input2 = document.createElement('input');
+    input2.type = 'hidden';
+    input2.name = 'pointsId';
+    input2.value = document.getElementById('channelRewardID').value;
+    form.appendChild(input2);
+
+    // Submit the form
+    document.body.appendChild(form);
+    form.submit();
+}
+
 
 function enableBotCommand(){
     const styleSelect = document.getElementById('style');
@@ -110,6 +134,32 @@ function disableBotCommand(){
 
 }
 
+function switchCommand(choice){
+    settings.user = document.getElementById('user').innerHTML;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/settings';
+
+    // Create form fields
+    const input1 = document.createElement('input');
+    input1.type = 'hidden';
+    input1.name = 'botUsed';
+    input1.value = choice;
+    form.appendChild(input1);
+
+    const input12 = document.createElement('input');
+    input12.type = 'hidden';
+    input12.name = 'user';
+    input12.value = settings.user;
+    form.appendChild(input12);
+
+
+    // Submit the form
+    document.body.appendChild(form);
+    form.submit();
+
+}
+    
 
 function whitelist(bool){
     const styleSelect = document.getElementById('style');
