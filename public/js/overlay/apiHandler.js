@@ -1,3 +1,5 @@
+let stop = false;
+
 function apiInit(user){
     //make a fetch call with request mode no-cors using jQuery
 
@@ -34,12 +36,13 @@ function userAccepted(user, data){
     if (string.includes(user)) {
         getInfo(user)
         setInterval(() => {
+            if (stop == true) return
             getInfo(user)
-    }, 1000);
+    }, 5000);
     }
 }   
 
-function getInfo(user){
+async function getInfo(user){
     const overlayContainer = document.getElementById('overlay-container');
 
 
@@ -54,7 +57,7 @@ function getInfo(user){
         url: "nowplaying/?user=" + user,
         type: "GET",
 
-        success: function(data){
+        success: async function(data){
         var info = data.data;
         console.log(data)
 
@@ -89,6 +92,43 @@ function getInfo(user){
         durationText.textContent = convertTime(info.totalMS);
         var timeBarWidth = (info.progress / info.totalMS) * 385; // Max width is 385px
         timeBar.style.width = Math.min(timeBarWidth, 385) + "px";
+        await wait(1000)
+        if ((info.progress + 1000) >= info.totalMS) { 
+            getInfo(user) 
+            return;
+        }
+        timeText.textContent = convertTime(info.progress + 1000);
+        durationText.textContent = convertTime(info.totalMS);
+        var timeBarWidth = ((info.progress + 1000) / info.totalMS) * 385; // Max width is 385px
+        timeBar.style.width = Math.min(timeBarWidth, 385) + "px";
+        await wait(1000)
+        if ((info.progress + 2000) >= info.totalMS) { 
+            getInfo(user) 
+            return;
+        }
+        timeText.textContent = convertTime(info.progress + 2000);
+        durationText.textContent = convertTime(info.totalMS);
+        var timeBarWidth = ((info.progress + 2000) / info.totalMS) * 385; // Max width is 385px
+        timeBar.style.width = Math.min(timeBarWidth, 385) + "px";
+        await wait(1000)
+        if ((info.progress + 3000) >= info.totalMS) { 
+            getInfo(user) 
+            return;
+        }
+        timeText.textContent = convertTime(info.progress + 3000);
+        durationText.textContent = convertTime(info.totalMS);
+        var timeBarWidth = ((info.progress + 3000) / info.totalMS) * 385; // Max width is 385px
+        timeBar.style.width = Math.min(timeBarWidth, 385) + "px";
+        await wait(1000)
+        if ((info.progress + 4000) >= info.totalMS) { 
+            getInfo(user)
+            return;
+        }
+        timeText.textContent = convertTime(info.progress + 4000);
+        durationText.textContent = convertTime(info.totalMS);
+        var timeBarWidth = ((info.progress + 4000) / info.totalMS) * 385; // Max width is 385px
+        timeBar.style.width = Math.min(timeBarWidth, 385) + "px";
+        
     },
 
     error: function(xhr, status, error){
@@ -103,6 +143,7 @@ function getInfo(user){
                 overlayContainer.classList.remove('overlay-container');
             }
         }
+        if (xhr.status == 403) tooManyRequests()
     }
 
 })
@@ -142,4 +183,19 @@ setInterval(() => {
 
 }, 10)
 
+function tooManyRequests(){
 
+    const overlayContainer = document.querySelector('.overlay-container');
+    const songText = document.querySelector('.song-name-text');
+    const artistText = document.querySelector('.artist-name-text');
+    overlayContainer.classList.add('overlay-container-error');
+    overlayContainer.classList.remove('overlay-container');
+    songText.textContent = "ERR: Request+ has issued too many requests.";
+    artistText.textContent = "Join the discord for more info.";
+    stop = true
+
+}
+
+async function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
