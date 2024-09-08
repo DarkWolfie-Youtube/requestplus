@@ -116,7 +116,7 @@ OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
     tokenURL: 'https://id.twitch.tv/oauth2/token',
     clientID: tclient_id,
     clientSecret: tclient_secret,
-    callbackURL: testing,
+    callbackURL: tcallback,
     state: true
   },
   async function(accessToken, refreshToken, data, profile, done) {
@@ -180,7 +180,7 @@ app.get("/overlay", async (req, res) => {
     res.send(html)
 })
 let client;
-app.listen(30000, async () => {
+app.listen(3000, async () => {
     log.info("Ready! Listening on port 3000");
     DBEdit.sync()
     DBEdit2.sync()
@@ -388,7 +388,7 @@ app.get('/slogin', async (req, res) => {
             response_type: 'code',
             client_id: sclient_id,
             scope: scope,
-            redirect_uri: testing2,
+            redirect_uri: scallback,
             state: state
           }));
 
@@ -435,7 +435,7 @@ app.get("/scallback" , async (req, res) => {
       url: 'https://accounts.spotify.com/api/token',
       form: {
           code: code,
-          redirect_uri: testing2,
+          redirect_uri: scallback,
           grant_type: 'authorization_code'
         },
         headers: {
