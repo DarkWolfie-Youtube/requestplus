@@ -33,12 +33,14 @@
                                         <option value="default">Default</option>
                                         <option value="hologram">Hologram</option>
                                         <option value="ichinyan">Ichinyan</option>
+                                        <option value="mdev">mdev</option>
                                         <option value="twinGhost">TwinGhost</option>
 
                                     <% } else if (style.style == "default") { %>
                                         <option value="default">Default</option>
                                         <option value="hologram">Hologram</option>
                                         <option value="ichinyan">Ichinyan</option>
+                                        <option value="mdev">mdev</option>
                                         <option value="moonkingbean">MoonKingBean</option>
                                         <option value="twinGhost">TwinGhost</option>
                                     <%
@@ -46,6 +48,7 @@
                                         <option value="hologram">Hologram</option>
                                         <option value="default">Default</option>
                                         <option value="ichinyan">Ichinyan</option>
+                                        <option value="mdev">mdev</option>
                                         <option value="moonkingbean">MoonKingBean</option>
                                         <option value="twinGhost">TwinGhost</option>
 
@@ -57,6 +60,7 @@
                                         <option value="default">Default</option>
                                         <option value="hologram">Hologram</option>
                                         <option value="ichinyan">Ichinyan</option>
+                                        <option value="mdev">mdev</option>
                                         <option value="moonkingbean">MoonKingBean</option>
                                         
                                     <% }
@@ -64,6 +68,15 @@
                                         <option value="ichinyan">Ichinyan</option>
                                         <option value="default">Default</option>
                                         <option value="hologram">Hologram</option>
+                                        <option value="mdev">mdev</option>
+                                        <option value="moonkingbean">MoonKingBean</option>
+                                        <option value="twinGhost">TwinGhost</option>
+                                    <% }
+                                     else if (style.style == "mdev") { %>
+                                        <option value="mdev">mdev</option>
+                                        <option value="default">Default</option>
+                                        <option value="hologram">Hologram</option>
+                                        <option value="ichinyan">Ichinyan</option>
                                         <option value="moonkingbean">MoonKingBean</option>
                                         <option value="twinGhost">TwinGhost</option>
                                     <% }
@@ -71,6 +84,7 @@
                                     <option value="default">Default</option>
                                     <option value="hologram">Hologram</option>
                                     <option value="ichinyan">Ichinyan</option>
+                                    <option value="mdev">mdev</option>
                                     <option value="moonkingbean">MoonKingBean</option>
                                     <option value="twinGhost">TwinGhost</option>
                                     <% } %>
@@ -79,6 +93,7 @@
 
                     <br>
                     <% if (style.isRequestEnabled == true) { %>
+                    <button class="btn btn-success btn-lg nav-btn botHover"  onclick="window.location = '/settings/channelPoint'" role="button">Open Channel Points Menu</button>
                     <button class="btn btn-success btn-lg nav-btn botHover"  onclick="disableBotCommand()" role="button">Disable Requests</button>
                     <div class="text-center botHoverText">
                         This Button disables song requests via twitch channel bot!

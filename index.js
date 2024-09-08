@@ -60,6 +60,7 @@ const DBEdit3 = data.define('user_settings', {
     style: Sequelize.STRING,
     isRequestEnabled: Sequelize.BOOLEAN,
     botUsed: Sequelize.STRING,
+    pointsId: Sequelize.STRING,
     whitelisted: Sequelize.BOOLEAN
 
 
@@ -69,8 +70,8 @@ const DBEdit3 = data.define('user_settings', {
 var stateKey = 'spotify_auth_state';
 var scallback = 'https://requestplus.xyz/scallback';
 var tcallback = 'https://requestplus.xyz/tcallback';
-var testing = "http://localhost:3000/tcallback"
-var testing2 = 'http://localhost:3000/scallback';
+var testing = "http://localhost:30000/tcallback"
+var testing2 = 'http://localhost:30000/scallback';
 let channels = JSON.parse(fs.readFileSync('./channels.json', 'utf8')).channels;
 async function getToken(){
 
@@ -115,7 +116,7 @@ OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
     tokenURL: 'https://id.twitch.tv/oauth2/token',
     clientID: tclient_id,
     clientSecret: tclient_secret,
-    callbackURL: tcallback,
+    callbackURL: testing,
     state: true
   },
   async function(accessToken, refreshToken, data, profile, done) {
@@ -179,7 +180,7 @@ app.get("/overlay", async (req, res) => {
     res.send(html)
 })
 let client;
-app.listen(3000, async () => {
+app.listen(30000, async () => {
     log.info("Ready! Listening on port 3000");
     DBEdit.sync()
     DBEdit2.sync()
@@ -205,6 +206,83 @@ client.connect().then(() => {
 client.on('message', async (channel, tags, message, self) => {
 	// Ignore echoed messages.
 	if(self) return;
+    if (tags['custom-reward-id'] != null) {
+        log.debug(tags['custom-reward-id'])
+        var data = await DBEdit3.findOne({where: {pointsId: tags['custom-reward-id']}})
+    if (data) {
+        if (data.botUsed == "points"){
+            var token = await DBEdit.findOne({where: {user: data.user}})
+            
+            var options = {
+                url: `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${tags['room-id']}&reward_id=${tags['custom-reward-id']}&status=UNFULFILLED`,
+                headers: {
+                    'Client-ID': tclient_id,
+                    'Accept': 'application/vnd.twitchtv.v5+json',
+                    'Authorization': `Bearer ${token.ttoken}`
+                }
+
+            }
+
+            request.get(options, async function(error, response, body) {
+                
+                if (!error && response.statusCode === 200) {
+                    var twitch = JSON.parse(body)
+                    if (twitch.data.length > 0) {
+                        if (twitch.data[0].user_input == message) {
+                            var requesta = message
+                            if (requesta.includes("https://open.spotify.com")){
+                                var ida = requesta.split("https://open.spotify.com/track/")[1]
+                                var id = ida.split("?si=")[0]
+                                var broadcaster = channel.replace("#", "")
+
+                                var options = {
+                                    url: `https://api.spotify.com/v1/tracks/${id}`,
+                                    method: 'GET',
+                                    headers: {
+                                    'Authorization': `Bearer ${await getUserSToken(broadcaster)}`
+                                    }
+                                }
+                                    request.get(options, async function(error, response, body) {
+                                        if (!error && response.statusCode === 200) {
+                                            var track = JSON.parse(body)
+                                            
+                                            var options  = {
+                                                url: `https://api.spotify.com/v1/me/player/queue?uri=${track.uri}`,
+                                                headers: {
+                                                    'Authorization': `Bearer ${await getUserSToken(broadcaster)}`
+                                                }
+                                            }
+                                            request.post(options, function(error, response, body) {
+                                                console.log(response.statusCode)
+                                                if (!error && response.statusCode === 200) {
+                                                    client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, now queued.`)
+                                                    completeReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                                    return
+                                                    
+                                                } else {
+                                                    client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, could not be queued. Error with spotify.`)
+                                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                                    return
+                                                }
+                                            })
+
+                                        } 
+                                    }
+                                )
+                            } else {
+                                client.say(channel, `Request+: Please provide a valid spotify link!`)
+                                rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                return
+                            }
+                        }
+                    }
+                }
+            })
+
+        }
+    }
+    }
+    
 
 	if(message.toLowerCase().startsWith('!request') || message.toLowerCase().startsWith('!sr')) {
 		var requesta = message.split(' ').splice(1).join(' ')
@@ -231,26 +309,65 @@ client.on('message', async (channel, tags, message, self) => {
                             }
                         }
                         request.post(options, function(error, response, body) {
-                            if (!error && response.statusCode === 204) {
+                            console.log(response.statusCode)
+                            if (!error && response.statusCode === 200) {
+                                client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, now queued.`)
                                 
+                            } else {
+                                client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, could not be queued. Error with spotify.`)
                             }
                         })
-                        client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, now queued.`)
 
                     }
-                })
-
-                    
-            
-                                  
+                })                 
         } else {
             client.say(channel, `Request+: Please provide a valid spotify link!`)
         }
 	}
     });
 })
+ async function rejectReward(room, reward, id, token) {
+    var options = {
+        url: "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?id=" + id + "&broadcaster_id=" + room + "&reward_id=" + reward,
+        headers: {
+            'Client-ID': tclient_id,
+            'Accept': 'application/vnd.twitchtv.v5+json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: {
+            status: "CANCELED"
+        }, 
+        json: true
 
+    }
+    request.patch(options, function(error, response, body) {
+        console.log(body)
+        if (!error && response.statusCode === 200) {
+            log.debug("Refunded user reward: " + body.data[0].id)
+        }
+    })
+ }
+ async function completeReward(room, reward, id, token) {
+    var options = {
+        url: "https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?id=" + id + "&broadcaster_id=" + room + "&reward_id=" + reward,
+        headers: {
+            'Client-ID': tclient_id,
+            'Accept': 'application/vnd.twitchtv.v5+json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: {
+            status: "FULFILLED"
+        }, 
+        json: true
 
+    }
+    request.patch(options, function(error, response, body) {
+        console.log(body)
+        if (!error && response.statusCode === 200) {
+            log.debug("Completed user reward: " + body.data[0].id)
+        }
+    })
+ }
 
 app.get("/signup", async (req, res) => {
         res.redirect('/twitch_check')
@@ -271,7 +388,7 @@ app.get('/slogin', async (req, res) => {
             response_type: 'code',
             client_id: sclient_id,
             scope: scope,
-            redirect_uri: scallback,
+            redirect_uri: testing2,
             state: state
           }));
 
@@ -289,8 +406,8 @@ app.get('/slogout', async (req, res) => {
         res.status(401).send({message: "Unauthorized", error: true})
     }
 })
-app.get("/twitch_check", passport.authenticate('twitch', { scope: ['user_read', "channel:manage:moderators"] }))
-app.get("/login", passport.authenticate('twitch', { scope: ['user_read', "channel:manage:moderators"] }))
+app.get("/twitch_check", passport.authenticate('twitch', { scope: ['user_read', "channel:manage:moderators", "channel:manage:redemptions" ] } ) )
+app.get("/login", passport.authenticate('twitch', { scope: ['user_read', "channel:manage:moderators", "channel:manage:redemptions" ] } ) )
 
 
 app.get("/scallback" , async (req, res) => {
@@ -318,7 +435,7 @@ app.get("/scallback" , async (req, res) => {
       url: 'https://accounts.spotify.com/api/token',
       form: {
           code: code,
-          redirect_uri: scallback,
+          redirect_uri: testing2,
           grant_type: 'authorization_code'
         },
         headers: {
@@ -477,6 +594,88 @@ app.get("/settings", async (req, res) => {
       }
 })
 
+app.get("/settings/channelPoint", async (req, res) => {
+    if(req.session && req.session.passport && req.session.passport.user) {
+        var dbdata = await DBEdit3.findOne({where: {user: req.session.passport.user.data[0].login}})
+        if (dbdata) {
+            if (dbdata.whitelisted !== true) {
+                const html = await ejs.renderFile("views/settingsnw.ejs", {user: req.session.passport.user, DBEdit: DBEdit, DBEdit3: DBEdit3}, {async: true});
+                res.send(html)
+        } else {
+           
+            const html = await ejs.renderFile("views/settingschannel.ejs", {user: req.session.passport.user, DBEdit: DBEdit, DBEdit3: DBEdit3}, {async: true});
+            res.send(html)
+            
+            
+        }}
+      } else {
+        res.status(401).redirect('/')
+      }
+})
+
+app.post("/api/channelpoints", async (req, res) => {
+
+    const user = await req.body.user
+    if (user == req.session.passport.user.data[0].login) {
+        var doWeEnable = await req.body.channelEnable
+        if (doWeEnable == 1) {
+            var data = await DBEdit3.findOne({where: {user: user}})
+            if (data) {
+                var options = {
+                    url: "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=" + req.session.passport.user.data[0].id,
+                    headers: {
+                        'Client-ID': tclient_id,
+                        'Accept': 'application/vnd.twitchtv.v5+json',
+                        'Authorization': `Bearer ${req.session.passport.user.accessToken}`
+                    },
+                    json: true,
+                    body: {
+                        "title": "Song Requests",
+                        "cost": 1,
+                        "prompt": "Send in a Spotify URL to add a song to the queue!",
+                        "is_enabled": false,
+                        "is_user_input_required": true,
+                        "background_color": "#ff0000"
+                    }
+
+                }
+
+                request.post(options, function(error, response, body) {
+                    var body = JSON.parse(JSON.stringify(body))
+                    console.log(body)
+                    if (!error && response.statusCode === 200) {
+                        DBEdit3.update({botUsed: "points", pointsId: `${body.data[0].id}`}, {where: {user: user}})
+                    }
+                })
+                res.redirect('/settings/channelPoint')
+            }
+        } else {
+            var data = await DBEdit3.findOne({where: {user: user}})
+            console.log(data.botUsed + "/" + data.pointsId)
+            if (data) {
+                var options = {
+                    url: "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=" + req.session.passport.user.data[0].id + "&id=" + data.pointsId,
+                    headers: {
+                        'Client-ID': tclient_id,
+                        'Accept': 'application/vnd.twitchtv.v5+json',
+                        'Authorization': `Bearer ${req.session.passport.user.accessToken}`
+                    },
+                    json: true,
+                    
+
+                }
+
+                request.delete(options, function(error, response, body) {
+                    console.log(body)
+                    if (!error && response.statusCode === 204) {
+                        DBEdit3.update({botUsed: null, pointsId: null}, {where: {user: user}})
+                    }
+                })
+                res.redirect('/settings/channelPoint')
+            }
+        }
+    }
+})
 
 app.post("/api/settings", async (req, res) => {
     const user = await req.body.user
