@@ -60,6 +60,7 @@ const DBEdit3 = data.define('user_settings', {
     style: Sequelize.STRING,
     isRequestEnabled: Sequelize.BOOLEAN,
     botUsed: Sequelize.STRING,
+    pointsId: Sequelize.STRING,
     whitelisted: Sequelize.BOOLEAN
 
 
@@ -616,7 +617,64 @@ app.post("/api/channelpoints", async (req, res) => {
 
     const user = await req.body.user
     if (user == req.session.passport.user.data[0].login) {
-    
+        var doWeEnable = await req.body.channelEnable
+        if (doWeEnable == 1) {
+            var data = await DBEdit3.findOne({where: {user: user}})
+            if (data) {
+                var options = {
+                    url: "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=" + req.session.passport.user.data[0].id,
+                    headers: {
+                        'Client-ID': tclient_id,
+                        'Accept': 'application/vnd.twitchtv.v5+json',
+                        'Authorization': `Bearer ${req.session.passport.user.accessToken}`
+                    },
+                    json: true,
+                    body: {
+                        "title": "Song Requests",
+                        "cost": 1,
+                        "prompt": "Send in a Spotify URL to add a song to the queue!",
+                        "is_enabled": false,
+                        "is_user_input_required": true,
+                        "background_color": "#ff0000"
+                    }
+
+                }
+
+                request.post(options, function(error, response, body) {
+                    var body = JSON.parse(JSON.stringify(body))
+                    console.log(body)
+                    if (!error && response.statusCode === 200) {
+                        DBEdit3.update({botUsed: "points", pointsId: `${body.data[0].id}`}, {where: {user: user}})
+                    }
+                })
+                res.redirect('/settings/channelPoint')
+            }
+        } else {
+            var data = await DBEdit3.findOne({where: {user: user}})
+            console.log(data.botUsed + "/" + data.pointsId)
+            if (data) {
+                var options = {
+                    url: "https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=" + req.session.passport.user.data[0].id + "&id=" + data.pointsId,
+                    headers: {
+                        'Client-ID': tclient_id,
+                        'Accept': 'application/vnd.twitchtv.v5+json',
+                        'Authorization': `Bearer ${req.session.passport.user.accessToken}`
+                    },
+                    json: true,
+                    
+
+                }
+
+                request.delete(options, function(error, response, body) {
+                    console.log(body)
+                    if (!error && response.statusCode === 204) {
+                        DBEdit3.update({botUsed: null, pointsId: null}, {where: {user: user}})
+                    }
+                })
+                res.redirect('/settings/channelPoint')
+            }
+        }
+    }
 })
 
 app.post("/api/settings", async (req, res) => {

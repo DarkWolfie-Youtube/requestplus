@@ -20,24 +20,23 @@
                 <h5 class="card-title">Settings > Channel Points</h5>
                 <p class="card-text">Below are a few options to manage the Song Request Channel Point. Please choose from the following options.</p>
 
+                <p class="card-text">Please edit the price at twitch's management page located <a href="https://dashboard.twitch.tv/u/<%=user.data[0].login%>/viewer-rewards/channel-points/rewards">here</a>. (YOU ALSO NEED TO ENABLE IT THERE TOO)</p>
                 <br>
-
                 <div class="btn-container">
                     <button class="btn btn-success btn-lg nav-btn" onclick="createChannelPoints()" role="button">Create Channel Point</button>
                     <button class="btn btn-success btn-lg nav-btn" onclick="deleteChannelPoints()" role="button">Delete Channel Point</button>
                 </div>
                 <p class="card-text">Unfortunately, this is the only options at this time. A full configurator for these will be made in the furture.</p>
                 
-        <br>
-        <!-- make a login with spotify button -->
-        
-                    
-        <div id="user-info" style="display: none;">
-        <div id="user"><%=user.data[0].login%></div>
-        <div id="user-id"><%=user.data[0].id%></div>
-        <div id="user-description"><%=user.data[0].description%></div>
+            <br>
+            <!-- make a login with spotify button -->
+            
+                        
+            <div id="user-info" style="display: none;">
+            <div id="user"><%=user.data[0].login%></div>
+            <div id="user-id"><%=user.data[0].id%></div>
+            <div id="user-description"><%=user.data[0].description%></div>
         </div>
-
         <div class="card bg-light mt-4 mb-4">
             Copyright © 2024 Request+<br>
             Request+ is not affiliated with Spotify.
@@ -46,4 +45,5 @@
     <script src="/js/main/apichannel.js"></script>
 
 
-</body></html>
+</body>
+</html>
