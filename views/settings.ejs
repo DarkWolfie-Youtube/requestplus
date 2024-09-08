@@ -92,8 +92,13 @@
                     </select>
 
                     <br>
-                    <% if (style.isRequestEnabled == true) { %>
-                    <button class="btn btn-success btn-lg nav-btn botHover"  onclick="window.location = '/settings/channelPoint'" role="button">Open Channel Points Menu</button>
+                    <% if (style.isRequestEnabled == true) { 
+                        if (user.data[0].broadcaster_type == "partner") { %>
+                            <button class="btn btn-success btn-lg nav-btn botHover"  onclick="window.location = '/settings/channelPoint'" role="button">Open Channel Points Menu</button>
+                        <% } else if (user.data[0].broadcaster_type == "affiliate") { %>
+                            <button class="btn btn-success btn-lg nav-btn botHover"  onclick="window.location = '/settings/channelPoint'" role="button">Open Channel Points Menu</button>
+                        <% } else {}%>
+
                     <button class="btn btn-success btn-lg nav-btn botHover"  onclick="disableBotCommand()" role="button">Disable Requests</button>
                     <div class="text-center botHoverText">
                         This Button disables song requests via twitch channel bot!
