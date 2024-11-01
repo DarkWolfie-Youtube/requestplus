@@ -38,9 +38,12 @@ function userAccepted(user, data){
         setInterval(() => {
             if (stop == true) return
             getInfo(user)
-    }, 5000);
+    }, 2000);
     }
 }   
+
+
+var timeElapsed = 0;
 
 async function getInfo(user){
     const overlayContainer = document.getElementById('overlay-container');
@@ -65,7 +68,18 @@ async function getInfo(user){
             songText.textContent = "No Song Playing";
             artistText.textContent = "";
             songImg.src = "img/overlay/placeholder.png";
+            if (timeElapsed < 2){
+                timeElapsed++ 
+
+            } else {
+                overlayContainer.classList.add('hide');
+            }
             return
+        }
+
+        if (timeElapsed > 0) {
+            overlayContainer.classList.remove('hide');
+            timeElapsed = 0
         }
 
         if (overlayContainer.classList.contains('overlay-container-error')) {

@@ -66,7 +66,7 @@ const DBEdit3 = data.define('user_settings', {
 
 });
 
-
+updateTTokens()
 var stateKey = 'spotify_auth_state';
 var scallback = 'https://requestplus.xyz/scallback';
 var tcallback = 'https://requestplus.xyz/tcallback';
@@ -231,8 +231,28 @@ client.on('message', async (channel, tags, message, self) => {
                         if (twitch.data[0].user_input == message) {
                             var requesta = message
                             if (requesta.includes("https://open.spotify.com")){
+                                if (requesta.includes("https://open.spotify.com/album")) {
+                                    client.say(channel, `Request+: Please provide a spotify track link!`)
+                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                    return
+                                }
+                                if (requesta.includes("https://open.spotify.com/playlist")) {
+                                    client.say(channel, `Request+: Please provide a spotify track link!`)
+                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                    return
+                                }
+                                if (requesta.includes("https://open.spotify.com/episode")) {
+                                    client.say(channel, `Request+: Please provide a spotify track link!`)
+                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                    return
+                                }
                                 var ida = requesta.split("https://open.spotify.com/track/")[1]
-                                var id = ida.split("?si=")[0]
+                                let id;
+                                if (ida.includes("?si=")) {
+                                    id = ida.split("?si=")[0]
+                                } else {
+                                    id = ida
+                                }
                                 var broadcaster = channel.replace("#", "")
 
                                 var options = {
@@ -279,7 +299,7 @@ client.on('message', async (channel, tags, message, self) => {
                 }
             })
 
-        }
+        }  
     }
     }
     
@@ -287,8 +307,25 @@ client.on('message', async (channel, tags, message, self) => {
 	if(message.toLowerCase().startsWith('!request') || message.toLowerCase().startsWith('!sr')) {
 		var requesta = message.split(' ').splice(1).join(' ')
         if (requesta.includes("https://open.spotify.com")){
+            if (requesta.includes("https://open.spotify.com/album")) {
+                client.say(channel, `Request+: Please provide a spotify track link!`)
+                return
+            }
+            if (requesta.includes("https://open.spotify.com/playlist")) {
+                client.say(channel, `Request+: Please provide a spotify track link!`)
+                return
+            }
+            if (requesta.includes("https://open.spotify.com/episode")) {
+                client.say(channel, `Request+: Please provide a spotify track link!`)
+                return
+            }
             var ida = requesta.split("https://open.spotify.com/track/")[1]
-            var id = ida.split("?si=")[0]
+            let id;
+            if (ida.includes("?si=")) {
+                id = ida.split("?si=")[0]
+            } else {
+                id = ida
+            }
             var broadcaster = channel.replace("#", "")
 
             var options = {
@@ -801,10 +838,9 @@ app.post("/api/settings", async (req, res) => {
 
 setInterval(() => {
     updateTokens()
-}, 2000)
-setInterval(() => {
     updateTTokens()
-}, 360000)
+}, 20000)
+
 
 function updateTokens() {
     var data = DBEdit.findAll()
@@ -923,7 +959,7 @@ async function getUserSToken(user){
 
 // Admin Panel
 app.get("/admin", async (req, res) => {
-    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "darkwolfievt") {
+    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "wolfiievt") {
         const html = await ejs.renderFile("views/admin.ejs", {user: req.params.user, admin: req.session.passport.user, DBEdit: DBEdit, DBEdit3: DBEdit3}, {async: true});
         res.send(html)
     } else {
@@ -932,7 +968,7 @@ app.get("/admin", async (req, res) => {
 })
 
 app.get("/admin/users/settings/:user", async (req, res) => {
-    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "darkwolfievt") {
+    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "wolfiievt") {
         const html = await ejs.renderFile("views/settingsa.ejs", {user: req.params.user, admin: req.session.passport.user, DBEdit: DBEdit, DBEdit3: DBEdit3}, {async: true});
         res.send(html)
     } else {
@@ -943,7 +979,7 @@ app.get("/admin/users/settings/:user", async (req, res) => {
 app.post('/api/admin', async (req, res) => {
     const user = await req.body.user
     const whitelisted = await req.body.whitelist
-    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "darkwolfievt") {
+    if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.data[0].login == "wolfiievt") {
         
             var data = await DBEdit3.findOne({where: {user: user}})
             if (data){

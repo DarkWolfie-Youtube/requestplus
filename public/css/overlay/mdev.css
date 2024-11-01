@@ -1,17 +1,22 @@
 :root{
-    --main-color: linear-gradient(120deg, rgba(7,7,41,1) 15%, rgba(32,255,254,1) 60%, rgba(32,255,254,0) 90%);
+    --main-color: linear-gradient(120deg, rgba(7,7,41,1) 15%, rgb(15, 155, 155) 60%, rgba(32,255,254,0) 90%);
     --error: rgb(255, 0, 0)
 }
 .overlay-container {
     position: absolute;
-    top: 20px;
+    top: 100px;
     left: 20px;
     width: 570px;
     height: 100px;
     border-radius: 10px;
     transition: background-color 0.5s;
     background: var(--main-color);
-}/* make the image rounded */
+    transition: top 1.2s ease-in-out;
+}
+.overlay-container.hide {
+    top: -100px;
+}
+/* make the image rounded */
 .overlay-image {
     position: absolute;
     
@@ -127,11 +132,15 @@
 
 .overlay-container-error {
     position: absolute;
-    top: 20px;
+    top: 100px;
     left: 20px;
-    width: 600px;
-    height: 200px;
-    background-color: var(--error);
+    width: 570px;
+    height: 100px;
     border-radius: 10px;
+    background-color: var(--error);
     transition: background-color 0.5s;
+    transition: top 1.2s ease-in-out;
+}
+.overlay-container-error.hide {
+    top: -100px;
 }

@@ -1,5 +1,5 @@
 :root{
-    --main-color: linear-gradient(120deg, rgb(4, 92, 4) 15%, rgb(180, 72, 166) 60%, rgba(0, 0, 0, 0.082) 90%);
+    --main-color: linear-gradient(120deg, rgb(146, 85, 182) 15%, rgb(62, 1, 112) 60%, rgba(0, 0, 0, 0) 90%);
     --error: rgb(255, 0, 0)
 }
 .overlay-container {
