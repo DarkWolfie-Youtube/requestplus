@@ -12,7 +12,7 @@
     "passport-oauth": "^1.0.0",
     "passport-twitch": "^1.0.3",
     "request": "^2.88.2",
-    "sequelize": "^6.37.3",
+    "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7"
   }
 }
