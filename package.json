@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@twurple/auth-tmi": "^7.2.0",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -12,7 +13,6 @@
     "passport-twitch": "^1.0.3",
     "request": "^2.88.2",
     "sequelize": "^6.37.3",
-    "sqlite3": "^5.1.7",
-    "tmi.js": "^1.8.5"
+    "sqlite3": "^5.1.7"
   }
 }

@@ -24,7 +24,8 @@ var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
 const Sequelize = require('sequelize');
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const wait = require('node:timers/promises').setTimeout;
-const tmi = require('tmi.js');
+const tmi = require('@twurple/auth-tmi');
+const {RefreshingAuthProvider} = require('@twurple/auth');
 const { url } = require("node:inspector");
 const { Console } = require("node:console");
 const SESSION_SECRET = generateRandomString(32);
@@ -180,6 +181,20 @@ app.get("/overlay", async (req, res) => {
     res.send(html)
 })
 let client;
+const authProvider = new RefreshingAuthProvider({
+    clientId: tclient_id,
+    clientSecret: tclient_secret
+})
+
+const tokenData = JSON.parse(fs.readFileSync('./token.json', 'utf8'))
+authProvider.onRefresh(async (userId, newTokenData) => {
+    await fs.writeFile(`./token.json`, JSON.stringify(newTokenData, null, 4), 'utf-8')
+    await DBEdit.update({ttoken: newTokenData.accessToken, trefresh_token: newTokenData.refreshToken}, {where: {user: 'requestplus'}})
+
+});
+authProvider.addUser('1110775247', tokenData, 'bot');
+
+
 app.listen(3000, async () => {
     log.info("Ready! Listening on port 3000");
     DBEdit.sync()
@@ -187,14 +202,15 @@ app.listen(3000, async () => {
     DBEdit3.sync()
 
 
-const bot_token = await getToken()
 
 client = new tmi.Client({
-	options: { debug: true },
-	identity: {
-		username: 'requestplus',
-		password: bot_token
+	options: { debug: true, messagesLogLevel: 'info'  },
+    connection: {
+		reconnect: true,
+		secure: true
 	},
+    authProvider: authProvider,
+    authIntents: 'bot',
 	channels: channels
     
 });
@@ -209,98 +225,98 @@ client.on('message', async (channel, tags, message, self) => {
     if (tags['custom-reward-id'] != null) {
         log.debug(tags['custom-reward-id'])
         var data = await DBEdit3.findOne({where: {pointsId: tags['custom-reward-id']}})
-    if (data) {
-        if (data.botUsed == "points"){
-            var token = await DBEdit.findOne({where: {user: data.user}})
-            
-            var options = {
-                url: `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${tags['room-id']}&reward_id=${tags['custom-reward-id']}&status=UNFULFILLED`,
-                headers: {
-                    'Client-ID': tclient_id,
-                    'Accept': 'application/vnd.twitchtv.v5+json',
-                    'Authorization': `Bearer ${token.ttoken}`
+        if (data) {
+            if (data.botUsed == "points"){
+                var token = await DBEdit.findOne({where: {user: data.user}})
+                
+                var options = {
+                    url: `https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?broadcaster_id=${tags['room-id']}&reward_id=${tags['custom-reward-id']}&status=UNFULFILLED`,
+                    headers: {
+                        'Client-ID': tclient_id,
+                        'Accept': 'application/vnd.twitchtv.v5+json',
+                        'Authorization': `Bearer ${token.ttoken}`
+                    }
+
                 }
 
-            }
+                request.get(options, async function(error, response, body) {
+                    
+                    if (!error && response.statusCode === 200) {
+                        var twitch = JSON.parse(body)
+                        if (twitch.data.length > 0) {
+                            if (twitch.data[0].user_input == message) {
+                                var requesta = message
+                                if (requesta.includes("https://open.spotify.com")){
+                                    if (requesta.includes("https://open.spotify.com/album")) {
+                                        client.say(channel, `Request+: Please provide a spotify track link!`)
+                                        rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                        return
+                                    }
+                                    if (requesta.includes("https://open.spotify.com/playlist")) {
+                                        client.say(channel, `Request+: Please provide a spotify track link!`)
+                                        rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                        return
+                                    }
+                                    if (requesta.includes("https://open.spotify.com/episode")) {
+                                        client.say(channel, `Request+: Please provide a spotify track link!`)
+                                        rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                        return
+                                    }
+                                    var ida = requesta.split("https://open.spotify.com/track/")[1]
+                                    let id;
+                                    if (ida.includes("?si=")) {
+                                        id = ida.split("?si=")[0]
+                                    } else {
+                                        id = ida
+                                    }
+                                    var broadcaster = channel.replace("#", "")
 
-            request.get(options, async function(error, response, body) {
-                
-                if (!error && response.statusCode === 200) {
-                    var twitch = JSON.parse(body)
-                    if (twitch.data.length > 0) {
-                        if (twitch.data[0].user_input == message) {
-                            var requesta = message
-                            if (requesta.includes("https://open.spotify.com")){
-                                if (requesta.includes("https://open.spotify.com/album")) {
-                                    client.say(channel, `Request+: Please provide a spotify track link!`)
-                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
-                                    return
-                                }
-                                if (requesta.includes("https://open.spotify.com/playlist")) {
-                                    client.say(channel, `Request+: Please provide a spotify track link!`)
-                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
-                                    return
-                                }
-                                if (requesta.includes("https://open.spotify.com/episode")) {
-                                    client.say(channel, `Request+: Please provide a spotify track link!`)
-                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
-                                    return
-                                }
-                                var ida = requesta.split("https://open.spotify.com/track/")[1]
-                                let id;
-                                if (ida.includes("?si=")) {
-                                    id = ida.split("?si=")[0]
+                                    var options = {
+                                        url: `https://api.spotify.com/v1/tracks/${id}`,
+                                        method: 'GET',
+                                        headers: {
+                                        'Authorization': `Bearer ${await getUserSToken(broadcaster)}`
+                                        }
+                                    }
+                                        request.get(options, async function(error, response, body) {
+                                            if (!error && response.statusCode === 200) {
+                                                var track = JSON.parse(body)
+                                                
+                                                var options  = {
+                                                    url: `https://api.spotify.com/v1/me/player/queue?uri=${track.uri}`,
+                                                    headers: {
+                                                        'Authorization': `Bearer ${await getUserSToken(broadcaster)}`
+                                                    }
+                                                }
+                                                request.post(options, function(error, response, body) {
+                                                    console.log(response.statusCode)
+                                                    if (!error && response.statusCode === 200) {
+                                                        client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, now queued.`)
+                                                        completeReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                                        return
+                                                        
+                                                    } else {
+                                                        client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, could not be queued. Error with spotify.`)
+                                                        rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                                        return
+                                                    }
+                                                })
+
+                                            } 
+                                        }
+                                    )
                                 } else {
-                                    id = ida
+                                    client.say(channel, `Request+: Please provide a valid spotify link!`)
+                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
+                                    return
                                 }
-                                var broadcaster = channel.replace("#", "")
-
-                                var options = {
-                                    url: `https://api.spotify.com/v1/tracks/${id}`,
-                                    method: 'GET',
-                                    headers: {
-                                    'Authorization': `Bearer ${await getUserSToken(broadcaster)}`
-                                    }
-                                }
-                                    request.get(options, async function(error, response, body) {
-                                        if (!error && response.statusCode === 200) {
-                                            var track = JSON.parse(body)
-                                            
-                                            var options  = {
-                                                url: `https://api.spotify.com/v1/me/player/queue?uri=${track.uri}`,
-                                                headers: {
-                                                    'Authorization': `Bearer ${await getUserSToken(broadcaster)}`
-                                                }
-                                            }
-                                            request.post(options, function(error, response, body) {
-                                                console.log(response.statusCode)
-                                                if (!error && response.statusCode === 200) {
-                                                    client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, now queued.`)
-                                                    completeReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
-                                                    return
-                                                    
-                                                } else {
-                                                    client.say(channel, `Request+: ${track.name} by ${track.artists[0].name}, could not be queued. Error with spotify.`)
-                                                    rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
-                                                    return
-                                                }
-                                            })
-
-                                        } 
-                                    }
-                                )
-                            } else {
-                                client.say(channel, `Request+: Please provide a valid spotify link!`)
-                                rejectReward(tags['room-id'], tags['custom-reward-id'], twitch.data[0].id, token.ttoken)
-                                return
                             }
                         }
                     }
-                }
-            })
+                })
 
-        }  
-    }
+            }  
+        }
     }
     
 
@@ -361,6 +377,29 @@ client.on('message', async (channel, tags, message, self) => {
             client.say(channel, `Request+: Please provide a valid spotify link!`)
         }
 	}
+    if (message.toLowerCase().startsWith('!np')) {
+
+        var options = {
+            url: "https://requestplus.xyz/nowplaying?user=" + channel.replace("#", ""),
+        }
+        request.get(options, function(error, response, body) {
+            if (!error && response.statusCode === 200) {
+                info = JSON.parse(body)
+
+                if (info.message == "No song playing") {
+                    client.say(channel, "There is no song playing right now")
+                } else {
+                    client.say(channel, `Now playing: ${info.data.song_name} by ${info[0].artists[0].name}`)
+                }
+            }
+
+            
+        })
+
+
+
+        
+    }
     });
 })
  async function rejectReward(room, reward, id, token) {
